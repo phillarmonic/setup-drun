@@ -1,0 +1,205 @@
+name: 'Setup drun'
+description: 'Install and setup drun - a declarative task runner for DevOps workflows'
+author: 'phillarmonic'
+
+branding:
+  icon: 'play'
+  color: 'blue'
+
+inputs:
+  version:
+    description: 'Version of drun to install (e.g., "v2.0.0", "latest")'
+    required: false
+    default: 'latest'
+  
+  token:
+    description: 'GitHub token for API requests (to avoid rate limiting)'
+    required: false
+    default: ${{ github.token }}
+  
+  cache:
+    description: 'Enable caching of downloaded binaries'
+    required: false
+    default: 'true'
+
+outputs:
+  version:
+    description: 'The version of drun that was installed'
+    value: ${{ steps.install.outputs.version }}
+  
+  path:
+    description: 'Path to the installed drun binary'
+    value: ${{ steps.install.outputs.path }}
+  
+  cache-hit:
+    description: 'Whether the binary was restored from cache'
+    value: ${{ steps.cache.outputs.cache-hit }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Determine platform and architecture
+      id: platform
+      shell: bash
+      run: |
+        # Determine OS
+        case "${{ runner.os }}" in
+          Linux)
+            os="linux"
+            ;;
+          macOS)
+            os="darwin"
+            ;;
+          Windows)
+            os="windows"
+            ;;
+          *)
+            echo "::error::Unsupported operating system: ${{ runner.os }}"
+            exit 1
+            ;;
+        esac
+        
+        # Determine architecture
+        case "${{ runner.arch }}" in
+          X64)
+            arch="amd64"
+            ;;
+          ARM64)
+            arch="arm64"
+            ;;
+          *)
+            echo "::error::Unsupported architecture: ${{ runner.arch }}"
+            exit 1
+            ;;
+        esac
+        
+        # Set binary name
+        if [[ "$os" == "windows" ]]; then
+          binary_name="drun-${os}-${arch}.exe"
+          executable_name="drun.exe"
+        else
+          binary_name="drun-${os}-${arch}"
+          executable_name="drun"
+        fi
+        
+        echo "os=$os" >> $GITHUB_OUTPUT
+        echo "arch=$arch" >> $GITHUB_OUTPUT
+        echo "binary-name=$binary_name" >> $GITHUB_OUTPUT
+        echo "executable-name=$executable_name" >> $GITHUB_OUTPUT
+        echo "platform=${os}-${arch}" >> $GITHUB_OUTPUT
+
+    - name: Get latest version
+      id: version
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      run: |
+        if [[ "${{ inputs.version }}" == "latest" ]]; then
+          echo "Fetching latest release version..."
+          latest_version=$(curl -sSf \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/phillarmonic/drun/releases/latest" \
+            | jq -r '.tag_name')
+          
+          if [[ -z "$latest_version" || "$latest_version" == "null" ]]; then
+            echo "::error::Failed to fetch latest version"
+            exit 1
+          fi
+          
+          echo "version=$latest_version" >> $GITHUB_OUTPUT
+          echo "Latest version: $latest_version"
+        else
+          echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          echo "Using specified version: ${{ inputs.version }}"
+        fi
+
+    - name: Setup cache
+      id: cache
+      if: inputs.cache == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}/drun-${{ steps.platform.outputs.platform }}
+        key: drun-${{ steps.version.outputs.version }}-${{ steps.platform.outputs.platform }}
+        restore-keys: |
+          drun-${{ steps.version.outputs.version }}-${{ steps.platform.outputs.platform }}
+
+    - name: Download and install drun
+      id: install
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      run: |
+        version="${{ steps.version.outputs.version }}"
+        binary_name="${{ steps.platform.outputs.binary-name }}"
+        executable_name="${{ steps.platform.outputs.executable-name }}"
+        platform="${{ steps.platform.outputs.platform }}"
+        
+        # Set installation directory
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          install_dir="${{ runner.temp }}/drun-bin"
+        else
+          install_dir="${{ runner.temp }}/drun-bin"
+        fi
+        
+        mkdir -p "$install_dir"
+        binary_path="$install_dir/$executable_name"
+        
+        # Check if binary exists in cache
+        cache_path="${{ runner.temp }}/drun-$platform"
+        if [[ "${{ inputs.cache }}" == "true" && -f "$cache_path" ]]; then
+          echo "Using cached binary..."
+          cp "$cache_path" "$binary_path"
+          chmod +x "$binary_path"
+        else
+          echo "Downloading drun $version for $platform..."
+          download_url="https://github.com/phillarmonic/drun/releases/download/$version/$binary_name"
+          
+          echo "Download URL: $download_url"
+          
+          # Download binary
+          if ! curl -sSfL "$download_url" -o "$binary_path"; then
+            echo "::error::Failed to download drun binary from $download_url"
+            echo "::error::Please check if the release exists: https://github.com/phillarmonic/drun/releases/tag/$version"
+            exit 1
+          fi
+          
+          # Make executable
+          chmod +x "$binary_path"
+          
+          # Cache the binary if caching is enabled
+          if [[ "${{ inputs.cache }}" == "true" ]]; then
+            cp "$binary_path" "$cache_path"
+          fi
+        fi
+        
+        # Verify installation
+        echo "Verifying installation..."
+        if ! "$binary_path" --version; then
+          echo "::error::Downloaded binary failed verification"
+          exit 1
+        fi
+        
+        # Add to PATH
+        echo "$install_dir" >> $GITHUB_PATH
+        
+        # Set outputs
+        installed_version=$("$binary_path" --version | head -n1 | awk '{print $NF}' || echo "$version")
+        echo "version=$installed_version" >> $GITHUB_OUTPUT
+        echo "path=$binary_path" >> $GITHUB_OUTPUT
+        
+        echo "✅ drun $installed_version installed successfully!"
+        echo "📍 Installed to: $binary_path"
+        echo "🔧 Added to PATH: $install_dir"
+
+    - name: Verify drun is available
+      shell: bash
+      run: |
+        echo "Verifying drun is available in PATH..."
+        if command -v drun >/dev/null 2>&1; then
+          echo "✅ drun is available in PATH"
+          drun --version
+        else
+          echo "::error::drun is not available in PATH"
+          exit 1
+        fi

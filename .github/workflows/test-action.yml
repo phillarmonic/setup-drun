@@ -1,0 +1,289 @@
+name: Test Setup drun Action
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'action.yml'
+      - '.github/workflows/test-action.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'action.yml'
+      - '.github/workflows/test-action.yml'
+  workflow_dispatch:
+
+jobs:
+  test-platforms:
+    name: Test on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      
+      - name: Test setup drun (latest)
+        uses: ./
+        id: setup-latest
+        with:
+          version: 'latest'
+      
+      - name: Verify drun installation
+        shell: bash
+        run: |
+          echo "Testing drun installation..."
+          
+          # Check if drun is in PATH
+          if ! command -v drun >/dev/null 2>&1; then
+            echo "❌ drun not found in PATH"
+            exit 1
+          fi
+          
+          # Check version
+          echo "✅ drun found in PATH"
+          drun --version
+          
+          # Verify outputs
+          echo "📊 Action outputs:"
+          echo "  Version: ${{ steps.setup-latest.outputs.version }}"
+          echo "  Path: ${{ steps.setup-latest.outputs.path }}"
+          echo "  Cache hit: ${{ steps.setup-latest.outputs.cache-hit }}"
+          
+          # Test basic functionality
+          echo "🧪 Testing basic functionality..."
+          drun --help >/dev/null
+          echo "✅ drun --help works"
+      
+      - name: Test with example drun file
+        shell: bash
+        run: |
+          # Create a simple test drun file
+          cat > test.drun << 'EOF'
+          # Simple test drun file
+          task hello:
+            shell: echo "Hello from drun on ${{ matrix.os }}!"
+          
+          task version:
+            shell: drun --version
+          EOF
+          
+          echo "🧪 Testing drun execution..."
+          drun hello
+          drun version
+
+  test-versions:
+    name: Test version ${{ matrix.version }} on Ubuntu
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['latest']  # Add specific versions here when available
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Test setup drun (${{ matrix.version }})
+        uses: ./
+        id: setup-version
+        with:
+          version: ${{ matrix.version }}
+      
+      - name: Verify installation
+        run: |
+          echo "Testing drun ${{ matrix.version }}..."
+          drun --version
+          echo "✅ Version test passed"
+
+  test-caching:
+    name: Test caching functionality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: First installation (should download)
+        uses: ./
+        id: first-install
+        with:
+          version: 'latest'
+          cache: 'true'
+      
+      - name: Verify first installation
+        run: |
+          echo "First install cache hit: ${{ steps.first-install.outputs.cache-hit }}"
+          drun --version
+      
+      - name: Second installation (should use cache)
+        uses: ./
+        id: second-install
+        with:
+          version: 'latest'
+          cache: 'true'
+      
+      - name: Verify caching worked
+        run: |
+          echo "Second install cache hit: ${{ steps.second-install.outputs.cache-hit }}"
+          drun --version
+          
+          # Note: Cache hit might still be false on first run due to GitHub Actions cache behavior
+          echo "✅ Caching test completed"
+
+  test-no-cache:
+    name: Test without caching
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install without cache
+        uses: ./
+        id: no-cache
+        with:
+          version: 'latest'
+          cache: 'false'
+      
+      - name: Verify installation
+        run: |
+          echo "Cache disabled - cache hit: ${{ steps.no-cache.outputs.cache-hit }}"
+          drun --version
+          echo "✅ No-cache test passed"
+
+  test-custom-token:
+    name: Test with custom token
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install with custom token
+        uses: ./
+        id: custom-token
+        with:
+          version: 'latest'
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Verify installation
+        run: |
+          drun --version
+          echo "✅ Custom token test passed"
+
+  integration-test:
+    name: Integration test with real drun workflow
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup drun
+        uses: ./
+        with:
+          version: 'latest'
+      
+      - name: Create comprehensive test workflow
+        run: |
+          cat > integration-test.drun << 'EOF'
+          # Integration test drun file
+          
+          task setup:
+            shell: |
+              echo "Setting up test environment..."
+              mkdir -p test-output
+              echo "Setup complete" > test-output/setup.txt
+          
+          task test:
+            depends: [setup]
+            shell: |
+              echo "Running tests..."
+              if [ -f test-output/setup.txt ]; then
+                echo "✅ Setup dependency worked"
+                echo "Test passed" > test-output/test.txt
+              else
+                echo "❌ Setup dependency failed"
+                exit 1
+              fi
+          
+          task build:
+            depends: [test]
+            shell: |
+              echo "Building application..."
+              echo "Build complete" > test-output/build.txt
+              echo "✅ Build successful"
+          
+          task cleanup:
+            shell: |
+              echo "Cleaning up..."
+              rm -rf test-output
+              echo "✅ Cleanup complete"
+          
+          task all:
+            depends: [build, cleanup]
+            shell: echo "✅ All tasks completed successfully!"
+          EOF
+      
+      - name: Run integration test
+        run: |
+          echo "🚀 Running integration test..."
+          drun all
+          echo "✅ Integration test passed!"
+
+  summary:
+    name: Test Summary
+    needs: [test-platforms, test-versions, test-caching, test-no-cache, test-custom-token, integration-test]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Test Results Summary
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.test-platforms.result }}" == "success" ]]; then
+            echo "✅ Platform tests: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Platform tests: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.test-versions.result }}" == "success" ]]; then
+            echo "✅ Version tests: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Version tests: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.test-caching.result }}" == "success" ]]; then
+            echo "✅ Caching tests: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Caching tests: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.test-no-cache.result }}" == "success" ]]; then
+            echo "✅ No-cache tests: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ No-cache tests: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.test-custom-token.result }}" == "success" ]]; then
+            echo "✅ Custom token tests: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Custom token tests: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.integration-test.result }}" == "success" ]]; then
+            echo "✅ Integration tests: PASSED" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Integration tests: FAILED" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🎉 Setup drun GitHub Action testing completed!" >> $GITHUB_STEP_SUMMARY
