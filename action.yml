@@ -184,7 +184,7 @@ runs:
         echo "$install_dir" >> $GITHUB_PATH
         
         # Set outputs
-        installed_version=$("$binary_path" --version | head -n1 | awk '{print $NF}' || echo "$version")
+        installed_version=$("$binary_path" --version | grep "Version" | awk '{print $2}' || echo "$version")
         echo "version=$installed_version" >> $GITHUB_OUTPUT
         echo "path=$binary_path" >> $GITHUB_OUTPUT
         
