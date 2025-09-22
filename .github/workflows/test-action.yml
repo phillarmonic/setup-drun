@@ -68,10 +68,11 @@ jobs:
           # Simple test drun file
           version: 2.0
           
-          project "test-project" version "1.0"
+          project "test-project" version "1.0":
+            set platform to "${{ matrix.os }}"
           
           task "hello" means "Say hello from drun":
-            info "Hello from drun on ${{ matrix.os }}! 👋"
+            info "Hello from drun on {$globals.platform}! 👋"
           
           task "version" means "Show drun version":
             run "drun --version"
@@ -92,7 +93,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Test setup drun (${{ matrix.version }})
         uses: ./
@@ -112,7 +113,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: First installation (should download)
         uses: ./
@@ -147,7 +148,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Install without cache
         uses: ./
@@ -168,7 +169,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Install with custom token
         uses: ./
@@ -188,7 +189,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Setup drun
         uses: ./
@@ -202,29 +203,38 @@ jobs:
           # Integration test drun file
           version: 2.0
           
-          project "integration-test" version "1.0"
+          project "integration-test" version "1.0":
+            set test_dir to "test-output"
           
           task "setup" means "Setup test environment":
-            run "echo 'Setting up test environment...'"
-            run "mkdir -p test-output"
-            run "echo 'Setup complete' > test-output/setup.txt"
+            info "Setting up test environment..."
+            run "mkdir -p {$globals.test_dir}"
+            run "echo 'Setup complete' > {$globals.test_dir}/setup.txt"
+            success "Setup complete"
           
-          task "test" means "Run tests" depends ["setup"]:
-            run "echo 'Running tests...'"
-            run "if [ -f test-output/setup.txt ]; then echo '✅ Setup dependency worked'; echo 'Test passed' > test-output/test.txt; else echo '❌ Setup dependency failed'; exit 1; fi"
+          task "test" means "Run tests":
+            depends on setup
+            
+            info "Running tests..."
+            run "if [ -f {$globals.test_dir}/setup.txt ]; then echo '✅ Setup dependency worked'; echo 'Test passed' > {$globals.test_dir}/test.txt; else echo '❌ Setup dependency failed'; exit 1; fi"
+            success "Tests completed"
           
-          task "build" means "Build application" depends ["test"]:
-            run "echo 'Building application...'"
-            run "echo 'Build complete' > test-output/build.txt"
-            run "echo '✅ Build successful'"
+          task "build" means "Build application":
+            depends on test
+            
+            info "Building application..."
+            run "echo 'Build complete' > {$globals.test_dir}/build.txt"
+            success "Build successful"
           
           task "cleanup" means "Clean up test files":
-            run "echo 'Cleaning up...'"
-            run "rm -rf test-output"
-            run "echo '✅ Cleanup complete'"
+            info "Cleaning up..."
+            run "rm -rf {$globals.test_dir}"
+            success "Cleanup complete"
           
-          task "all" means "Run all tasks" depends ["build", "cleanup"]:
-            info "✅ All tasks completed successfully!"
+          task "all" means "Run all tasks":
+            depends on build, cleanup
+            
+            info "All tasks completed successfully!"
           EOF
       
       - name: Run integration test
