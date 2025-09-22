@@ -205,42 +205,50 @@ jobs:
           
           project "integration-test" version "1.0":
             set test_dir to "test-output"
+            set build_id to "build-123"
           
           task "setup" means "Setup test environment":
             info "Setting up test environment..."
             run "mkdir -p {$globals.test_dir}"
-            run "echo 'Setup complete' > {$globals.test_dir}/setup.txt"
+            run "echo 'Setup complete at $(date)' > {$globals.test_dir}/setup.txt"
+            run "echo 'Project: {$globals.project} v{$globals.version}' >> {$globals.test_dir}/setup.txt"
             success "Setup complete"
           
           task "test" means "Run tests":
-            depends on setup
-            
             info "Running tests..."
-            run "if [ -f {$globals.test_dir}/setup.txt ]; then echo '✅ Setup dependency worked'; echo 'Test passed' > {$globals.test_dir}/test.txt; else echo '❌ Setup dependency failed'; exit 1; fi"
+            run "echo 'Running test suite for build {$globals.build_id}'"
+            run "echo 'Test passed at $(date)' > {$globals.test_dir}/test.txt"
+            run "cat {$globals.test_dir}/setup.txt"
             success "Tests completed"
           
           task "build" means "Build application":
-            depends on test
-            
             info "Building application..."
-            run "echo 'Build complete' > {$globals.test_dir}/build.txt"
+            run "echo 'Building {$globals.project} version {$globals.version}'"
+            run "echo 'Build {$globals.build_id} complete at $(date)' > {$globals.test_dir}/build.txt"
             success "Build successful"
           
+          task "verify" means "Verify all components":
+            info "Verifying all components..."
+            run "ls -la {$globals.test_dir}/"
+            run "echo 'Files created:'"
+            run "find {$globals.test_dir} -type f -exec basename {} \;"
+            success "Verification complete"
+          
           task "cleanup" means "Clean up test files":
-            info "Cleaning up..."
+            info "Cleaning up test directory: {$globals.test_dir}"
             run "rm -rf {$globals.test_dir}"
             success "Cleanup complete"
-          
-          task "all" means "Run all tasks":
-            depends on build, cleanup
-            
-            info "All tasks completed successfully!"
           EOF
-      
+
       - name: Run integration test
         run: |
           echo "🚀 Running integration test..."
-          drun all
+          echo "Testing individual tasks..."
+          drun setup
+          drun test  
+          drun build
+          drun verify
+          drun cleanup
           echo "✅ Integration test passed!"
 
   summary:
