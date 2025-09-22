@@ -17,23 +17,23 @@ A GitHub Action to install and setup [drun](https://github.com/phillarmonic/drun
 
 ```yaml
 - name: Setup drun
-  uses: phillarmonic/drun@v1
+  uses: phillarmonic/setup-drun@v1
 ```
 
 ### Specify Version
 
 ```yaml
 - name: Setup drun
-  uses: phillarmonic/drun@v1
+  uses: phillarmonic/setup-drun@v1
   with:
-    version: 'v1.0.0'
+    version: 'v2.0.0'
 ```
 
 ### With Caching Disabled
 
 ```yaml
 - name: Setup drun
-  uses: phillarmonic/drun@v1
+  uses: phillarmonic/setup-drun@v1
   with:
     version: 'latest'
     cache: 'false'
@@ -43,7 +43,7 @@ A GitHub Action to install and setup [drun](https://github.com/phillarmonic/drun
 
 ```yaml
 - name: Setup drun
-  uses: phillarmonic/drun@v1
+  uses: phillarmonic/setup-drun@v1
   with:
     token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -52,7 +52,7 @@ A GitHub Action to install and setup [drun](https://github.com/phillarmonic/drun
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `version` | Version of drun to install (e.g., "v1.0.0", "latest") | No | `latest` |
+| `version` | Version of drun to install (e.g., "v2.0.0", "latest") | No | `latest` |
 | `token` | GitHub token for API requests (to avoid rate limiting) | No | `${{ github.token }}` |
 | `cache` | Enable caching of downloaded binaries | No | `true` |
 
@@ -85,7 +85,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Setup drun
-        uses: phillarmonic/drun@v1
+        uses: phillarmonic/setup-drun@v1
         with:
           version: 'latest'
       
@@ -116,7 +116,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Setup drun
-        uses: phillarmonic/drun@v1
+        uses: phillarmonic/setup-drun@v1
         id: drun
       
       - name: Show drun info
@@ -152,7 +152,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Setup drun ${{ matrix.drun-version }}
-        uses: phillarmonic/drun@v1
+        uses: phillarmonic/setup-drun@v1
         with:
           version: ${{ matrix.drun-version }}
       
@@ -179,7 +179,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Setup drun
-        uses: phillarmonic/drun@v1
+        uses: phillarmonic/setup-drun@v1
       
       - name: Build Docker image
         run: drun docker:build
@@ -210,7 +210,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Setup drun
-        uses: phillarmonic/drun@v1
+        uses: phillarmonic/setup-drun@v1
       
       - name: Configure kubectl
         uses: azure/setup-kubectl@v3
