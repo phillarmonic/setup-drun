@@ -274,7 +274,7 @@ If you encounter GitHub API rate limiting:
 If a specific version is not found:
 
 1. Check available releases: https://github.com/phillarmonic/drun/releases
-2. Ensure the version format is correct (e.g., "v1.0.0")
+2. Ensure the version format is correct (e.g., "v2.0.0")
 3. Use "latest" to get the most recent release
 
 ## Contributing
