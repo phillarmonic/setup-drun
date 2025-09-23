@@ -38,6 +38,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Configure Git line endings (Windows)
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+        git config --global core.safecrlf warn
     - name: Determine platform and architecture
       id: platform
       shell: bash
