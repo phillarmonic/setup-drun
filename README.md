@@ -7,6 +7,7 @@ A GitHub Action to install and setup [drun](https://github.com/phillarmonic/drun
 - ✅ **Cross-platform support**: Linux, macOS, and Windows
 - ✅ **Multi-architecture**: AMD64 and ARM64
 - ✅ **Version flexibility**: Install latest or specific versions
+- ✅ **Major version pinning**: Resolve `v2` or `v2.17` to the newest matching release
 - ✅ **Caching support**: Cache downloaded binaries for faster builds
 - ✅ **Zero dependencies**: No additional tools required
 - ✅ **GitHub token support**: Avoid API rate limiting
@@ -28,6 +29,17 @@ A GitHub Action to install and setup [drun](https://github.com/phillarmonic/drun
   with:
     version: 'v2.0.0'
 ```
+
+### Pin to a Major Version
+
+```yaml
+- name: Setup drun
+  uses: phillarmonic/setup-drun@v1
+  with:
+    version: 'v2'
+```
+
+This resolves to the newest stable `v2.x.y` release.
 
 ### With Caching Disabled
 
@@ -52,7 +64,7 @@ A GitHub Action to install and setup [drun](https://github.com/phillarmonic/drun
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `version` | Version of drun to install (e.g., "v2.0.0", "latest") | No | `latest` |
+| `version` | Version of drun to install (e.g., "v2", "v2.0.0", "latest") | No | `latest` |
 | `token` | GitHub token for API requests (to avoid rate limiting) | No | `${{ github.token }}` |
 | `cache` | Enable caching of downloaded binaries | No | `true` |
 
