@@ -1,6 +1,6 @@
 # Setup xdrun GitHub Action
 
-A GitHub Action to install and setup [xdrun](https://github.com/phillarmonic/drun) - a declarative task runner for DevOps workflows.
+A GitHub Action to install and setup [the xdrun cli](https://github.com/phillarmonic/drun) - a declarative task runner for DevOps workflows.
 
 ## Features
 

@@ -1,4 +1,4 @@
-name: Test Setup drun Action
+name: Test Setup xdrun Action
 
 on:
   push:
@@ -27,60 +27,60 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       
-      - name: Test setup drun (latest)
+      - name: Test setup xdrun (latest)
         uses: ./
         id: setup-latest
         with:
           version: 'latest'
       
-      - name: Verify drun installation
+      - name: Verify xdrun installation
         shell: bash
         run: |
-          echo "Testing drun installation..."
+          echo "Testing xdrun installation..."
           
-          # Check if drun is in PATH
-          if ! command -v drun >/dev/null 2>&1; then
-            echo "❌ drun not found in PATH"
+          # Check if xdrun is in PATH
+          if ! command -v xdrun >/dev/null 2>&1; then
+            echo "xdrun not found in PATH"
             exit 1
           fi
           
           # Check version
-          echo "✅ drun found in PATH"
-          drun --version
+          echo "xdrun found in PATH"
+          xdrun --version
           
           # Verify outputs
-          echo "📊 Action outputs:"
+          echo "Action outputs:"
           echo "  Version: ${{ steps.setup-latest.outputs.version }}"
           echo "  Path: ${{ steps.setup-latest.outputs.path }}"
           echo "  Cache hit: ${{ steps.setup-latest.outputs.cache-hit }}"
           
           # Test basic functionality
-          echo "🧪 Testing basic functionality..."
-          drun --help >/dev/null
-          echo "✅ drun --help works"
+          echo "Testing basic functionality..."
+          xdrun --help >/dev/null
+          echo "xdrun --help works"
       
-      - name: Test with example drun file
+      - name: Test with example xdrun file
         shell: bash
         run: |
-          # Create a simple test drun file in correct location
+          # Create a simple test xdrun file in correct location
           mkdir -p .drun
           cat > .drun/spec.drun << 'EOF'
-          # Simple test drun file
+          # Simple test xdrun file
           version: 2.0
           
           project "test-project" version "1.0":
             set platform to "${{ matrix.os }}"
           
-          task "hello" means "Say hello from drun":
-            info "Hello from drun on {$globals.platform}! 👋"
+          task "hello" means "Say hello from xdrun":
+            info "Hello from xdrun on {$globals.platform}"
           
-          task "version" means "Show drun version":
-            run "drun --version"
+          task "version" means "Show xdrun version":
+            run "xdrun --version"
           EOF
           
-          echo "🧪 Testing drun execution..."
-          drun hello
-          drun version
+          echo "Testing xdrun execution..."
+          xdrun hello
+          xdrun version
 
   test-versions:
     name: Test version ${{ matrix.version }} on Ubuntu
@@ -95,7 +95,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
       
-      - name: Test setup drun (${{ matrix.version }})
+      - name: Test setup xdrun (${{ matrix.version }})
         uses: ./
         id: setup-version
         with:
@@ -103,9 +103,9 @@ jobs:
       
       - name: Verify installation
         run: |
-          echo "Testing drun ${{ matrix.version }}..."
-          drun --version
-          echo "✅ Version test passed"
+          echo "Testing xdrun ${{ matrix.version }}..."
+          xdrun --version
+          echo "Version test passed"
 
   test-caching:
     name: Test caching functionality
@@ -125,7 +125,7 @@ jobs:
       - name: Verify first installation
         run: |
           echo "First install cache hit: ${{ steps.first-install.outputs.cache-hit }}"
-          drun --version
+          xdrun --version
       
       - name: Second installation (should use cache)
         uses: ./
@@ -137,10 +137,10 @@ jobs:
       - name: Verify caching worked
         run: |
           echo "Second install cache hit: ${{ steps.second-install.outputs.cache-hit }}"
-          drun --version
+          xdrun --version
           
           # Note: Cache hit might still be false on first run due to GitHub Actions cache behavior
-          echo "✅ Caching test completed"
+          echo "Caching test completed"
 
   test-no-cache:
     name: Test without caching
@@ -160,8 +160,8 @@ jobs:
       - name: Verify installation
         run: |
           echo "Cache disabled - cache hit: ${{ steps.no-cache.outputs.cache-hit }}"
-          drun --version
-          echo "✅ No-cache test passed"
+          xdrun --version
+          echo "No-cache test passed"
 
   test-custom-token:
     name: Test with custom token
@@ -180,18 +180,18 @@ jobs:
       
       - name: Verify installation
         run: |
-          drun --version
-          echo "✅ Custom token test passed"
+          xdrun --version
+          echo "Custom token test passed"
 
   integration-test:
-    name: Integration test with real drun workflow
+    name: Integration test with real xdrun workflow
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
       
-      - name: Setup drun
+      - name: Setup xdrun
         uses: ./
         with:
           version: 'latest'
@@ -200,7 +200,7 @@ jobs:
         run: |
           mkdir -p .drun
           cat > .drun/spec.drun << 'EOF'
-          # Integration test drun file
+          # Integration test xdrun file
           version: 2.0
           
           project "integration-test" version "1.0":
@@ -242,14 +242,14 @@ jobs:
 
       - name: Run integration test
         run: |
-          echo "🚀 Running integration test..."
+          echo "Running integration test..."
           echo "Testing individual tasks..."
-          drun setup
-          drun test  
-          drun build
-          drun verify
-          drun cleanup
-          echo "✅ Integration test passed!"
+          xdrun setup
+          xdrun test
+          xdrun build
+          xdrun verify
+          xdrun cleanup
+          echo "Integration test passed"
 
   summary:
     name: Test Summary
@@ -264,40 +264,40 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [[ "${{ needs.test-platforms.result }}" == "success" ]]; then
-            echo "✅ Platform tests: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "Platform tests: PASSED" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Platform tests: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Platform tests: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [[ "${{ needs.test-versions.result }}" == "success" ]]; then
-            echo "✅ Version tests: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "Version tests: PASSED" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Version tests: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Version tests: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [[ "${{ needs.test-caching.result }}" == "success" ]]; then
-            echo "✅ Caching tests: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "Caching tests: PASSED" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Caching tests: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Caching tests: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [[ "${{ needs.test-no-cache.result }}" == "success" ]]; then
-            echo "✅ No-cache tests: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "No-cache tests: PASSED" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ No-cache tests: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "No-cache tests: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [[ "${{ needs.test-custom-token.result }}" == "success" ]]; then
-            echo "✅ Custom token tests: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "Custom token tests: PASSED" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Custom token tests: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Custom token tests: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [[ "${{ needs.integration-test.result }}" == "success" ]]; then
-            echo "✅ Integration tests: PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "Integration tests: PASSED" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ Integration tests: FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "Integration tests: FAILED" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🎉 Setup drun GitHub Action testing completed!" >> $GITHUB_STEP_SUMMARY
+          echo "Setup xdrun GitHub Action testing completed." >> $GITHUB_STEP_SUMMARY
