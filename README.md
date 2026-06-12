@@ -1,31 +1,31 @@
-# Setup drun GitHub Action
+# Setup xdrun GitHub Action
 
-A GitHub Action to install and setup [drun](https://github.com/phillarmonic/drun) - a declarative task runner for DevOps workflows.
+A GitHub Action to install and setup [xdrun](https://github.com/phillarmonic/drun) - a declarative task runner for DevOps workflows.
 
 ## Features
 
-- ✅ **Cross-platform support**: Linux, macOS, and Windows
-- ✅ **Multi-architecture**: AMD64 and ARM64
-- ✅ **Version flexibility**: Install latest or specific versions
-- ✅ **Major version pinning**: Resolve `v2` or `v2.17` to the newest matching release
-- ✅ **Caching support**: Cache downloaded binaries for faster builds
-- ✅ **Zero dependencies**: No additional tools required
-- ✅ **GitHub token support**: Avoid API rate limiting
+- **Cross-platform support**: Linux, macOS, and Windows
+- **Multi-architecture**: AMD64 and ARM64
+- **Version flexibility**: Install latest or specific versions
+- **Major version pinning**: Resolve `v2` or `v2.17` to the newest matching release
+- **Caching support**: Cache downloaded binaries for faster builds
+- **Zero dependencies**: No additional tools required
+- **GitHub token support**: Avoid API rate limiting
 
 ## Usage
 
 ### Basic Usage
 
 ```yaml
-- name: Setup drun
-  uses: phillarmonic/setup-drun@v1
+- name: Setup xdrun
+  uses: phillarmonic/setup-drun@v2
 ```
 
 ### Specify Version
 
 ```yaml
-- name: Setup drun
-  uses: phillarmonic/setup-drun@v1
+- name: Setup xdrun
+  uses: phillarmonic/setup-drun@v2
   with:
     version: 'v2.0.0'
 ```
@@ -33,8 +33,8 @@ A GitHub Action to install and setup [drun](https://github.com/phillarmonic/drun
 ### Pin to a Major Version
 
 ```yaml
-- name: Setup drun
-  uses: phillarmonic/setup-drun@v1
+- name: Setup xdrun
+  uses: phillarmonic/setup-drun@v2
   with:
     version: 'v2'
 ```
@@ -44,8 +44,8 @@ This resolves to the newest stable `v2.x.y` release.
 ### With Caching Disabled
 
 ```yaml
-- name: Setup drun
-  uses: phillarmonic/setup-drun@v1
+- name: Setup xdrun
+  uses: phillarmonic/setup-drun@v2
   with:
     version: 'latest'
     cache: 'false'
@@ -54,8 +54,8 @@ This resolves to the newest stable `v2.x.y` release.
 ### With Custom GitHub Token
 
 ```yaml
-- name: Setup drun
-  uses: phillarmonic/setup-drun@v1
+- name: Setup xdrun
+  uses: phillarmonic/setup-drun@v2
   with:
     token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -64,7 +64,7 @@ This resolves to the newest stable `v2.x.y` release.
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `version` | Version of drun to install (e.g., "v2", "v2.0.0", "latest") | No | `latest` |
+| `version` | Version of xdrun to install (e.g., "v2", "v2.0.0", "latest") | No | `latest` |
 | `token` | GitHub token for API requests (to avoid rate limiting) | No | `${{ github.token }}` |
 | `cache` | Enable caching of downloaded binaries | No | `true` |
 
@@ -72,8 +72,8 @@ This resolves to the newest stable `v2.x.y` release.
 
 | Output | Description |
 |--------|-------------|
-| `version` | The version of drun that was installed |
-| `path` | Path to the installed drun binary |
+| `version` | The version of xdrun that was installed |
+| `path` | Path to the installed xdrun binary |
 | `cache-hit` | Whether the binary was restored from cache |
 
 ## Example Workflows
@@ -81,7 +81,7 @@ This resolves to the newest stable `v2.x.y` release.
 ### Simple CI/CD Pipeline
 
 ```yaml
-name: CI/CD with drun
+name: CI/CD with xdrun
 
 on:
   push:
@@ -96,16 +96,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup drun
-        uses: phillarmonic/setup-drun@v1
+      - name: Setup xdrun
+        uses: phillarmonic/setup-drun@v2
         with:
           version: 'latest'
       
       - name: Run tests
-        run: drun test
+        run: xdrun test
       
       - name: Build application
-        run: drun build
+        run: xdrun build
 ```
 
 ### Multi-platform Testing
@@ -127,20 +127,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup drun
-        uses: phillarmonic/setup-drun@v1
-        id: drun
+      - name: Setup xdrun
+        uses: phillarmonic/setup-drun@v2
+        id: xdrun
       
-      - name: Show drun info
+      - name: Show xdrun info
         run: |
-          echo "Installed version: ${{ steps.drun.outputs.version }}"
-          echo "Binary path: ${{ steps.drun.outputs.path }}"
-          echo "Cache hit: ${{ steps.drun.outputs.cache-hit }}"
+          echo "Installed version: ${{ steps.xdrun.outputs.version }}"
+          echo "Binary path: ${{ steps.xdrun.outputs.path }}"
+          echo "Cache hit: ${{ steps.xdrun.outputs.cache-hit }}"
       
-      - name: Run drun tasks
+      - name: Run xdrun tasks
         run: |
-          drun --version
-          drun test
+          xdrun --version
+          xdrun test
 ```
 
 ### Version Matrix Testing
@@ -154,7 +154,7 @@ jobs:
   test:
     strategy:
       matrix:
-        drun-version: ['v1.0.0', 'v1.1.0', 'latest']
+        xdrun-version: ['v2.0.0', 'v2.1.0', 'latest']
         os: [ubuntu-latest, macos-latest]
     
     runs-on: ${{ matrix.os }}
@@ -163,19 +163,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup drun ${{ matrix.drun-version }}
-        uses: phillarmonic/setup-drun@v1
+      - name: Setup xdrun ${{ matrix.xdrun-version }}
+        uses: phillarmonic/setup-drun@v2
         with:
-          version: ${{ matrix.drun-version }}
+          version: ${{ matrix.xdrun-version }}
       
-      - name: Test with drun
-        run: drun test
+      - name: Test with xdrun
+        run: xdrun test
 ```
 
 ### Docker Build Pipeline
 
 ```yaml
-name: Docker Build with drun
+name: Docker Build with xdrun
 
 on:
   push:
@@ -190,18 +190,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup drun
-        uses: phillarmonic/setup-drun@v1
+      - name: Setup xdrun
+        uses: phillarmonic/setup-drun@v2
       
       - name: Build Docker image
-        run: drun docker:build
+        run: xdrun docker:build
       
       - name: Run tests in container
-        run: drun docker:test
+        run: xdrun docker:test
       
       - name: Push to registry
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        run: drun docker:push
+        run: xdrun docker:push
 ```
 
 ### Kubernetes Deployment
@@ -221,38 +221,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup drun
-        uses: phillarmonic/setup-drun@v1
+      - name: Setup xdrun
+        uses: phillarmonic/setup-drun@v2
       
       - name: Configure kubectl
         uses: azure/setup-kubectl@v3
       
       - name: Deploy to staging
-        run: drun k8s:deploy --env=staging
+        run: xdrun k8s:deploy --env=staging
       
       - name: Run health checks
-        run: drun k8s:health-check --env=staging
+        run: xdrun k8s:health-check --env=staging
       
       - name: Deploy to production
         if: success()
-        run: drun k8s:deploy --env=production
+        run: xdrun k8s:deploy --env=production
 ```
 
 ## Supported Platforms
 
 | OS | Architecture | Status |
 |----|--------------|--------|
-| Linux | AMD64 | ✅ |
-| Linux | ARM64 | ✅ |
-| macOS | AMD64 | ✅ |
-| macOS | ARM64 | ✅ |
-| Windows | AMD64 | ✅ |
-| Windows | ARM64 | ✅ |
+| Linux | AMD64 | Supported |
+| Linux | ARM64 | Supported |
+| macOS | AMD64 | Supported |
+| macOS | ARM64 | Supported |
+| Windows | AMD64 | Supported |
+| Windows | ARM64 | Supported |
 
 ## Caching
 
 The action automatically caches downloaded binaries to speed up subsequent runs. The cache key includes:
-- drun version
+- xdrun version
 - Platform (OS + architecture)
 
 To disable caching, set the `cache` input to `'false'`.
@@ -268,7 +268,7 @@ The action uses the GitHub API to fetch release information. To avoid rate limit
 
 ### Binary Not Found
 
-If you see "drun: command not found":
+If you see "xdrun: command not found":
 
 1. Check that the action completed successfully
 2. Verify the platform is supported
@@ -295,4 +295,4 @@ Issues and pull requests are welcome! Please see the [main repository](https://g
 
 ## License
 
-This action is distributed under the same license as drun. See the [LICENSE](LICENSE) file for details.
+This action is distributed under the same license as xdrun. See the [LICENSE](LICENSE) file for details.
