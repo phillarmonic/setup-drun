@@ -151,7 +151,7 @@ runs:
     - name: Setup cache
       id: cache
       if: inputs.cache == 'true'
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ${{ runner.temp }}/xdrun-${{ steps.platform.outputs.platform }}
         key: xdrun-${{ steps.version.outputs.version }}-${{ steps.platform.outputs.platform }}

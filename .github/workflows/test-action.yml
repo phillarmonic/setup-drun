@@ -25,7 +25,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       
       - name: Test setup xdrun (latest)
         uses: ./
@@ -93,7 +93,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       
       - name: Test setup xdrun (${{ matrix.version }})
         uses: ./
@@ -113,7 +113,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       
       - name: First installation (should download)
         uses: ./
@@ -148,7 +148,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       
       - name: Install without cache
         uses: ./
@@ -169,7 +169,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       
       - name: Install with custom token
         uses: ./
@@ -189,7 +189,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       
       - name: Setup xdrun
         uses: ./
