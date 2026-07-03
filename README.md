@@ -1,6 +1,10 @@
 # Setup xdrun GitHub Action
 
-A GitHub Action to install and setup [the xdrun cli](https://github.com/phillarmonic/drun) - a declarative task runner for DevOps workflows.
+A GitHub Action to install and setup [the xdrun cli](https://github.com/phillarmonic/drun) - The runner of the Drun Automation Language.
+
+Drun was firstly conceived as a local task runner. However, with the evolution of the project, running the exact same sequence of tasks in the way Drun does, with the cool automations it can do became desirable on some projects' remote CI environments as well. Thus, this action.
+
+
 
 ## Features
 
@@ -62,18 +66,18 @@ This resolves to the newest stable `v2.x.y` release.
 
 ## Inputs
 
-| Input | Description | Required | Default |
-|-------|-------------|----------|---------|
-| `version` | Version of xdrun to install (e.g., "v2", "v2.0.0", "latest") | No | `latest` |
-| `token` | GitHub token for API requests (to avoid rate limiting) | No | `${{ github.token }}` |
-| `cache` | Enable caching of downloaded binaries | No | `true` |
+| Input     | Description                                                  | Required | Default               |
+| --------- | ------------------------------------------------------------ | -------- | --------------------- |
+| `version` | Version of xdrun to install (e.g., "v2", "v2.0.0", "latest") | No       | `latest`              |
+| `token`   | GitHub token for API requests (to avoid rate limiting)       | No       | `${{ github.token }}` |
+| `cache`   | Enable caching of downloaded binaries                        | No       | `true`                |
 
 ## Outputs
 
-| Output | Description |
-|--------|-------------|
-| `version` | The version of xdrun that was installed |
-| `path` | Path to the installed xdrun binary |
+| Output      | Description                                |
+| ----------- | ------------------------------------------ |
+| `version`   | The version of xdrun that was installed    |
+| `path`      | Path to the installed xdrun binary         |
 | `cache-hit` | Whether the binary was restored from cache |
 
 ## Example Workflows
@@ -95,15 +99,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup xdrun
         uses: phillarmonic/setup-drun@v2
         with:
           version: 'latest'
-      
+
       - name: Run tests
         run: xdrun test
-      
+
       - name: Build application
         run: xdrun build
 ```
@@ -120,23 +124,23 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup xdrun
         uses: phillarmonic/setup-drun@v2
         id: xdrun
-      
+
       - name: Show xdrun info
         run: |
           echo "Installed version: ${{ steps.xdrun.outputs.version }}"
           echo "Binary path: ${{ steps.xdrun.outputs.path }}"
           echo "Cache hit: ${{ steps.xdrun.outputs.cache-hit }}"
-      
+
       - name: Run xdrun tasks
         run: |
           xdrun --version
@@ -156,18 +160,18 @@ jobs:
       matrix:
         xdrun-version: ['v2.0.0', 'v2.1.0', 'latest']
         os: [ubuntu-latest, macos-latest]
-    
+
     runs-on: ${{ matrix.os }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup xdrun ${{ matrix.xdrun-version }}
         uses: phillarmonic/setup-drun@v2
         with:
           version: ${{ matrix.xdrun-version }}
-      
+
       - name: Test with xdrun
         run: xdrun test
 ```
@@ -185,20 +189,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup xdrun
         uses: phillarmonic/setup-drun@v2
-      
+
       - name: Build Docker image
         run: xdrun docker:build
-      
+
       - name: Run tests in container
         run: xdrun docker:test
-      
+
       - name: Push to registry
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         run: xdrun docker:push
@@ -216,23 +220,23 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup xdrun
         uses: phillarmonic/setup-drun@v2
-      
+
       - name: Configure kubectl
         uses: azure/setup-kubectl@v3
-      
+
       - name: Deploy to staging
         run: xdrun k8s:deploy --env=staging
-      
+
       - name: Run health checks
         run: xdrun k8s:health-check --env=staging
-      
+
       - name: Deploy to production
         if: success()
         run: xdrun k8s:deploy --env=production
@@ -240,18 +244,19 @@ jobs:
 
 ## Supported Platforms
 
-| OS | Architecture | Status |
-|----|--------------|--------|
-| Linux | AMD64 | Supported |
-| Linux | ARM64 | Supported |
-| macOS | AMD64 | Supported |
-| macOS | ARM64 | Supported |
-| Windows | AMD64 | Supported |
-| Windows | ARM64 | Supported |
+| OS      | Architecture | Status    |
+| ------- | ------------ | --------- |
+| Linux   | AMD64        | Supported |
+| Linux   | ARM64        | Supported |
+| macOS   | AMD64        | Supported |
+| macOS   | ARM64        | Supported |
+| Windows | AMD64        | Supported |
+| Windows | ARM64        | Supported |
 
 ## Caching
 
 The action automatically caches downloaded binaries to speed up subsequent runs. The cache key includes:
+
 - xdrun version
 - Platform (OS + architecture)
 
